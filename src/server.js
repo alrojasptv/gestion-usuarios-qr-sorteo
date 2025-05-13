@@ -1,9 +1,5 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const multer = require('multer');
-const csv = require('csv-parse/sync');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
 const socketIo = require('socket.io');
 const http = require('http');
 const path = require('path');
@@ -19,9 +15,6 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 app.use('/api', require('./routes/auth'));
 app.use('/api', require('./middleware/auth'), require('./routes/api'));
-
-// Multer for file uploads
-const upload = multer({ storage: multer.memoryStorage() });
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI, {
@@ -44,4 +37,4 @@ server.listen(port, () => {
   console.log(`Servidor corriendo en http://localhost:${port}`);
 });
 
-module.exports = { io, upload };
+module.exports = { io };

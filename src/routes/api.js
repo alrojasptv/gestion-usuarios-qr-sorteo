@@ -6,7 +6,8 @@ const QRs = require('../models/QRs');
 const Verificados = require('../models/Verificados');
 const Sorteo = require('../models/Sorteo');
 const Ganadores = require('../models/Ganadores');
-const { io, upload } = require('../server');
+const { io } = require('../server');
+const upload = require('../config/multer');
 
 const router = express.Router();
 
