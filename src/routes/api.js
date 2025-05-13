@@ -6,7 +6,7 @@ const QRs = require('../models/QRs');
 const Verificados = require('../models/Verificados');
 const Sorteo = require('../models/Sorteo');
 const Ganadores = require('../models/Ganadores');
-const { io } = require('../server');
+const { getIO } = require('../config/socket');
 const upload = require('../config/multer');
 
 const router = express.Router();
@@ -14,7 +14,18 @@ const router = express.Router();
 // Cargar CSV de usuarios
 router.post('/upload-csv', upload.single('csv'), async (req, res) => {
   try {
-    const records = csv.parse(req.file.buffer.toString(), { columns: true, skip_empty_lines: true, trim: true });
+    if (!req.file) {
+      return res.status(400).json({ error: 'No se proporcionó un archivo CSV' });
+    }
+    console.log('Archivo recibido:', req.file);
+    const records = csv.parse(req.file.buffer.toString(), {
+      columns: true,
+      skip_empty_lines: true,
+      trim: true,
+      delimiter: [',', ';'],
+      relax_column_count: true
+    });
+    console.log('Registros parseados:', records);
     const usuarios = records.map(record => ({
       nombre: record.nombre,
       apellidos: record.apellidos,
@@ -22,15 +33,16 @@ router.post('/upload-csv', upload.single('csv'), async (req, res) => {
     })).filter(u => u.nombre && u.apellidos && u.telefono);
 
     if (usuarios.length === 0) {
-      return res.status(400).json({ error: 'No se encontraron datos válidos en el CSV' });
+      return res.status(400).json({ error: 'No se encontraron datos válidos en el CSV. Asegúrate de que el archivo tenga las columnas "nombre", "apellidos" y "telefono".' });
     }
 
     await Usuarios.deleteMany({});
     await Usuarios.insertMany(usuarios);
-    io.emit('updateUsuarios');
+    getIO().emit('updateUsuarios');
     res.json({ message: 'Usuarios cargados correctamente', usuarios });
   } catch (err) {
-    res.status(500).json({ error: 'Error al procesar el CSV' });
+    console.error('Error al procesar CSV:', err.message, err.stack);
+    res.status(500).json({ error: `Error al procesar el CSV: ${err.message}` });
   }
 });
 
@@ -60,14 +72,25 @@ router.post('/verificar-telefono', async (req, res) => {
   const nombre_completo = `${usuario.nombre} ${usuario.apellidos}`;
   const qr = new QRs({ id, nombre_completo, telefono });
   await qr.save();
-  io.emit('updateQRs');
+  getIO().emit('updateQRs'); // Updated line
   res.json({ id, nombre_completo, telefono });
 });
 
 // Cargar CSV de QRs
 router.post('/upload-qrs', upload.single('csv'), async (req, res) => {
   try {
-    const records = csv.parse(req.file.buffer.toString(), { columns: true, skip_empty_lines: true, trim: true });
+    if (!req.file) {
+      return res.status(400).json({ error: 'No se proporcionó un archivo CSV' });
+    }
+    console.log('Archivo recibido:', req.file);
+    const records = csv.parse(req.file.buffer.toString(), {
+      columns: true,
+      skip_empty_lines: true,
+      trim: true,
+      delimiter: [',', ';'],
+      relax_column_count: true
+    });
+    console.log('Registros parseados:', records);
     const qrs = records.map(record => ({
       id: record.id,
       nombre_completo: record.nombre_completo,
@@ -75,15 +98,16 @@ router.post('/upload-qrs', upload.single('csv'), async (req, res) => {
     })).filter(q => q.id && q.nombre_completo && q.telefono);
 
     if (qrs.length === 0) {
-      return res.status(400).json({ error: 'No se encontraron datos válidos en el CSV' });
+      return res.status(400).json({ error: 'No se encontraron datos válidos en el CSV. Asegúrate de que el archivo tenga las columnas "id", "nombre_completo" y "telefono".' });
     }
 
     await QRs.deleteMany({});
     await QRs.insertMany(qrs);
-    io.emit('updateQRs');
+    getIO().emit('updateQRs');
     res.json({ message: 'QRs cargados correctamente', qrs });
   } catch (err) {
-    res.status(500).json({ error: 'Error al procesar el CSV' });
+    console.error('Error al procesar CSV:', err.message, err.stack);
+    res.status(500).json({ error: `Error al procesar el CSV: ${err.message}` });
   }
 });
 
@@ -119,7 +143,7 @@ router.post('/verificar-qr', async (req, res) => {
     fecha_verificacion: new Date().toLocaleString()
   });
   await verificacion.save();
-  io.emit('updateVerificados');
+  getIO().emit('updateVerificados');
   res.json({ message: 'Usuario verificado correctamente', verificacion });
 });
 
@@ -132,7 +156,18 @@ router.get('/verificados', async (req, res) => {
 // Cargar CSV de sorteo
 router.post('/upload-sorteo', upload.single('csv'), async (req, res) => {
   try {
-    const records = csv.parse(req.file.buffer.toString(), { columns: true, skip_empty_lines: true, trim: true });
+    if (!req.file) {
+      return res.status(400).json({ error: 'No se proporcionó un archivo CSV' });
+    }
+    console.log('Archivo recibido:', req.file);
+    const records = csv.parse(req.file.buffer.toString(), {
+      columns: true,
+      skip_empty_lines: true,
+      trim: true,
+      delimiter: [',', ';'],
+      relax_column_count: true
+    });
+    console.log('Registros parseados:', records);
     const sorteoUsuarios = records.map(record => ({
       id: record.id,
       nombre_completo: record.nombre_completo,
@@ -141,15 +176,16 @@ router.post('/upload-sorteo', upload.single('csv'), async (req, res) => {
     })).filter(u => u.id && u.nombre_completo && u.telefono);
 
     if (sorteoUsuarios.length === 0) {
-      return res.status(400).json({ error: 'No se encontraron datos válidos en el CSV' });
+      return res.status(400).json({ error: 'No se encontraron datos válidos en el CSV. Asegúrate de que el archivo tenga las columnas "id", "nombre_completo" y "telefono".' });
     }
 
     await Sorteo.deleteMany({});
     await Sorteo.insertMany(sorteoUsuarios);
-    io.emit('updateSorteo');
+    getIO().emit('updateSorteo');
     res.json({ message: 'Usuarios de sorteo cargados correctamente', sorteoUsuarios });
   } catch (err) {
-    res.status(500).json({ error: 'Error al procesar el CSV' });
+    console.error('Error al procesar CSV:', err.message, err.stack);
+    res.status(500).json({ error: `Error al procesar el CSV: ${err.message}` });
   }
 });
 
@@ -177,8 +213,8 @@ router.post('/sorteo', async (req, res) => {
 
   await Ganadores.create(ganadorConFecha);
   await Sorteo.deleteOne({ id: ganador.id });
-  io.emit('updateSorteo');
-  io.emit('updateGanadores');
+  getIO().emit('updateSorteo');
+  getIO().emit('updateGanadores');
   res.json({ message: 'Sorteo realizado', ganador: ganadorConFecha, sorteoUsuarios: await Sorteo.find() });
 });
 
@@ -195,11 +231,11 @@ router.delete('/borrar-datos', async (req, res) => {
   await Verificados.deleteMany({});
   await Sorteo.deleteMany({});
   await Ganadores.deleteMany({});
-  io.emit('updateUsuarios');
-  io.emit('updateQRs');
-  io.emit('updateVerificados');
-  io.emit('updateSorteo');
-  io.emit('updateGanadores');
+  getIO().emit('updateUsuarios');
+  getIO().emit('updateQRs');
+  getIO().emit('updateVerificados');
+  getIO().emit('updateSorteo');
+  getIO().emit('updateGanadores');
   res.json({ message: 'Todos los datos han sido borrados' });
 });
 
