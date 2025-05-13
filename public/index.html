@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Usuarios, QR y Sorteo</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <h1>Gestión de Usuarios, QR y Sorteo</h1>
+  <div id="authStatus">
+    <span id="userEmail"></span>
+    <button onclick="logout()">Cerrar Sesión</button>
+  </div>
+
+  <!-- Sección 1: Carga de Lista de Usuarios -->
+  <div class="section">
+    <h2>Carga de Lista de Usuarios</h2>
+    <div class="form-group">
+      <label for="csvUsuarios">Cargar CSV de usuarios:</label>
+      <input type="file" id="csvUsuarios" accept=".csv">
+    </div>
+    <button onclick="exportarUsuariosJSON()">Exportar Usuarios JSON</button>
+    <div id="csvError"></div>
+    <h3>Usuarios Registrados</h3>
+    <div class="table-container">
+      <table id="tablaUsuarios">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Apellidos</th>
+            <th>Teléfono</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpoTablaUsuarios"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Sección 2: Verificación de Teléfono y Generación de QR -->
+  <div class="section">
+    <h2>Verificación de Teléfono y Generación de QR</h2>
+    <div class="form-group">
+      <label for="telefonoInput">Número Telefónico:</label>
+      <input type="tel" id="telefonoInput" placeholder="Ej: 123456789">
+    </div>
+    <button onclick="verificarTelefono()">Verificar y Generar QR</button>
+    <div id="telefonoResult"></div>
+    <div id="qrContainer" class="qr-code"></div>
+  </div>
+
+  <!-- Sección 3: Verificación de QR -->
+  <div class="section">
+    <h2>Verificación de Código QR</h2>
+    <div class="form-group">
+      <label for="csvQRs">Cargar CSV de QRs generados:</label>
+      <input type="file" id="csvQRs" accept=".csv">
+    </div>
+    <button onclick="exportarQRsCSV()">Descargar CSV de QRs Generados</button>
+    <button onclick="exportarQRsJSON()">Exportar QRs JSON</button>
+    <h3>Lista de QRs Generados</h3>
+    <div class="table-container">
+      <table id="tablaQRs">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre Completo</th>
+            <th>Teléfono</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpoTablaQRs"></tbody>
+      </table>
+    </div>
+    <button onclick="iniciarEscaneoQR()">Iniciar Escaneo QR</button>
+    <button onclick="detenerEscaneoQR()" disabled id="detenerEscaneo">Detener Escaneo</button>
+    <div id="videoContainer">
+      <video id="video" autoplay playsinline></video>
+    </div>
+    <div id="qrResult"></div>
+    <h3>Usuarios Verificados</h3>
+    <div class="table-container">
+      <table id="tablaVerificados">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre Completo</th>
+            <th>Teléfono</th>
+            <th>Fecha Verificación</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpoTablaVerificados"></tbody>
+      </table>
+    </div>
+    <button onclick="exportarVerificadosCSV()">Descargar CSV de Usuarios Verificados</button>
+  </div>
+
+  <!-- Sección 4: Sorteo -->
+  <div class="section">
+    <h2>Sorteo</h2>
+    <div class="form-group">
+      <label for="csvSorteo">Cargar CSV de usuarios verificados:</label>
+      <input type="file" id="csvSorteo" accept=".csv">
+    </div>
+    <h3>Participantes</h3>
+    <div class="table-container">
+      <table id="tablaSorteo">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre Completo</th>
+            <th>Teléfono</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpoTablaSorteo"></tbody>
+      </table>
+    </div>
+    <button onclick="realizarSorteo()">SORTEAR</button>
+    <div id="roulette" class="roulette"></div>
+    <div id="sorteoResult"></div>
+    <h3>Ganadores</h3>
+    <div class="table-container">
+      <table id="tablaGanadores">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre Completo</th>
+            <th>Teléfono</th>
+            <th>Fecha Sorteo</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpoTablaGanadores"></tbody>
+      </table>
+    </div>
+    <button onclick="borrarDatos()">BORRAR DATOS</button>
+  </div>
+
+  <!-- Librerías -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
+  <script src="/scripts.js"></script>
+</body>
+</html>
